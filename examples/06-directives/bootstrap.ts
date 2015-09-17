@@ -12,17 +12,6 @@ import {
 
 @Directive({
   // using [ ] means selecting an attribute
-  selector: '[x-large]'
-})
-class XLarge {
-  constructor(element: ElementRef) {
-    element.nativeElement.style.fontSize = 'x-large';
-  }
-}
-
-
-@Directive({
-  // using [ ] means selecting an attribute
   selector: '[set-font]'
 })
 class SetFont {

@@ -14,127 +14,57 @@ import {CORE_DIRECTIVES, FORM_DIRECTIVES} from 'angular2/angular2';
 import {ROUTER_DIRECTIVES} from 'angular2/router';
 
 
-/*
- * Directive
- * XLarge is a simple directive to show how one of made
- */
-@Directive({
-  selector: '[x-large]' // using [ ] means selecting attributes
-})
-class XLarge {
-  constructor(element: ElementRef) {
-    // simple DOM manipulation to set font size to x-large
-    // `nativeElement` is the direct reference to the DOM element
-    element.nativeElement.fontSize = 'x-large';
-  }
-}
-
-
-/*
- * App Component
- * Top Level Component
- */
 @Component({
-  // The selector is what angular internally uses
-  // for `document.querySelectorAll(selector)` in our index.html
-  // where, in this case, selector is the string 'app'
-  selector: 'app' // <app></app>
+  selector: 'app'
 })
 @View({
-  // We need to tell Angular's compiler which directives are in our template.
-  // Doing so will allow Angular to attach our behavior to an element
-  directives: [ CORE_DIRECTIVES, FORM_DIRECTIVES, ROUTER_DIRECTIVES, XLarge ],
-  // Our list of styles in our component. We may add more to compose many styles together
-  styles: [`
-    .title {
-      font-family: Arial, Helvetica, sans-serif;
-    }
-    main {
-      padding: 1em;
-    }
-  `],
-  // Every Angular template is first compiled by the browser before Angular runs it's compiler
+  directives: [ CORE_DIRECTIVES, FORM_DIRECTIVES, ROUTER_DIRECTIVES],
+  styles: [
+    'main { width:50%; margin: 30px auto; font-size: 12px; }',
+    'h2 { font-size: 15px; text-align: center; }',
+    '.label { width: 100px; text-align: right; display: inline-block; }',
+    'button { display: block; padding: 2px 10px; border-radius: 5px; margin: 5px 0 0 100px; }',
+  ],
   template: `
-  <header>
-    <h1 class="title">Hello {{ title }}</h1>
-  </header>
-
   <main>
-    Your Content Here
-    <div>
+    <h2>The Angular2 Chat!</h2>
 
-      <input type="text" [value]="title" (input)="title = $event.target.value" autofocus>
-      <!--
-        Rather than wiring up two-way data-binding ourselves
-        we can use Angular's [(ng-model)] syntax
-        <input type="text" [(ng-model)]="title">
-      -->
+    <div>
+      <span class="label">Your name</span>
+      <input #name placeholder="Your name" />
     </div>
 
-    <pre>this.title = {{ title | json }}</pre>
-    <pre>this.data = {{ data | json }}</pre>
+    <div>
+      <span class="label">Message</span>
+      <input #ref [value]="message" (keyup)="message = ref.value" placeholder="Message" />
 
+      <button (click)="sendMessage(name.value)">Send</button>
+    </div>
+
+    <ul>
+      <li *ng-for="#message of messages">{{ message }}</li>
+    </ul>
   </main>
-
-  <footer>
-    WebPack Angular 2 Starter by <a href="https://twitter.com/AngularClass">@AngularClass</a>
-  </footer>
   `
 })
 export class App {
-  // These are member type
-  title: string;
-  data: Array<any> = []; // default data
+
   constructor(public http: Http) {
-    this.title = 'Angular 2';
+    const BASE_URL = 'ws://echo.websocket.org';
 
-    // Our API
-    // npm run express-install
-    // npm run express
+    this.messages = [];
+    this.message = '';
 
-    const BASE_URL = 'http://localhost:3001';
-    const TODO_API_URL = '/api/todos';
-    const JSON_HEADERS = new Headers({
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    });
+    this.ws = new WebSocket(BASE_URL);
 
-    this.http
-      .get(BASE_URL + TODO_API_URL, {
-        headers: JSON_HEADERS
-      })
-      .toRx()
-      .map(res => res.json())
-      .subscribe(
-        // onNext callback
-        data => this.serverData(data),
-        // onError callback
-        err  => this.errorMessage(err)
-      );//end http
+    this.ws.onerror   = (evt) => this.messages.unshift(`Error: ${evt}`);
+    this.ws.onmessage = (evt) => this.messages.unshift(evt.data);
+    this.ws.onclose   = (evt) => this.messages.unshift("** Closed **");
+    this.ws.onopen    = (evt) => this.messages.unshift("** Openned ***");
+
+    this.sendMessage = (name) => {
+      this.ws.send(`${ name }: ${ this.message }`);
+      this.message = '';
+    }
   }
-
-  serverData(data) {
-    console.log('data', data);
-    this.data = data;
-  }//serverData
-
-  errorMessage(err) {
-    if (err && (/Unexpected token/).test(err.message) || err.status === 0) {
-      console.info(`${'\n'
-        } // You must run these commands for the Http API to work in another process ${'\n'
-        } npm run express-install ${'\n'
-        } npm run express
-      `);
-    }//end err.message
-  }//errorMessage
-
 }
-
-
-
-/*
- * Please review the examples/ folder for more angular app examples
- * For help or questions please contact us at @AngularClass on twitter
- * or via chat on gitter at https://gitter.im/angular-class/angular2-webpack-starter
- */
-
