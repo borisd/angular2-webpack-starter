@@ -36,7 +36,7 @@ import {ROUTER_DIRECTIVES} from 'angular2/router';
 
     <div>
       <span class="label">Message</span>
-      <input #ref [value]="message" (keyup)="message = ref.value" placeholder="Message" />
+      <input [(ng-model)]="message" placeholder="Message" />
 
       <button (click)="sendMessage(name.value)">Send</button>
     </div>
